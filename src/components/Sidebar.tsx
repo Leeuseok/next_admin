@@ -32,6 +32,11 @@ const sidebarItems: SidebarItem[] = [
     icon: HomeIcon
   },
   {
+    name: '직원 관리',
+    href: '/admin/employees',
+    icon: UsersIcon
+  },
+  {
     name: '사용자 관리',
     href: '/admin/users',
     icon: UsersIcon

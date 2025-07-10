@@ -2,71 +2,71 @@
 
 import { useState } from 'react';
 import { PlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
-import { useUsers } from '@/hooks/useUsers';
-import UserStatsCards from '@/components/users/UserStatsCards';
-import UserTable from '@/components/users/UserTable';
-import UserForm from '@/components/users/UserForm';
+import { useEmployees } from '@/hooks/useEmployees';
+import EmployeeStatsCards from '@/components/employees/EmployeeStatsCards';
+import EmployeeTable from '@/components/employees/EmployeeTable';
+import EmployeeForm from '@/components/employees/EmployeeForm';
 import Modal from '@/components/Modal';
-import type { User } from '@/types/users';
+import type { Employee } from '@/types/employees';
 
-export default function UsersPage() {
+export default function EmployeesPage() {
   const {
-    users,
+    employees,
     stats,
     loading,
     error,
-    refreshUsers,
-    deleteUser,
-    updateUser,
-    createUser
-  } = useUsers();
+    refreshEmployees,
+    deleteEmployee,
+    updateEmployee,
+    createEmployee
+  } = useEmployees();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'create' | 'edit'>('create');
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
-  const handleCreateUser = () => {
+  const handleCreateEmployee = () => {
     setModalType('create');
-    setSelectedUser(null);
+    setSelectedEmployee(null);
     setIsModalOpen(true);
   };
 
-  const handleEditUser = (user: User) => {
+  const handleEditEmployee = (employee: Employee) => {
     setModalType('edit');
-    setSelectedUser(user);
+    setSelectedEmployee(employee);
     setIsModalOpen(true);
   };
 
-  const handleDeleteUser = async (id: string) => {
-    if (confirm('정말로 이 사용자를 삭제하시겠습니까?')) {
+  const handleDeleteEmployee = async (id: string) => {
+    if (confirm('정말로 이 직원을 삭제하시겠습니까?')) {
       try {
-        await deleteUser(id);
-        alert('사용자가 삭제되었습니다.');
+        await deleteEmployee(id);
+        alert('직원이 삭제되었습니다.');
       } catch (error) {
-        alert('사용자 삭제에 실패했습니다.');
+        alert('직원 삭제에 실패했습니다.');
       }
     }
   };
 
-  const handleStatusChange = async (id: string, status: User['status']) => {
+  const handleStatusChange = async (id: string, status: Employee['status']) => {
     try {
-      await updateUser(id, { status });
+      await updateEmployee(id, { status });
     } catch (error) {
       alert('상태 변경에 실패했습니다.');
     }
   };
 
-  const handleFormSubmit = async (userData: Omit<User, 'id' | 'createdAt'>) => {
+  const handleFormSubmit = async (employeeData: Omit<Employee, 'id' | 'createdAt'>) => {
     try {
       if (modalType === 'create') {
-        await createUser(userData);
-        alert('사용자가 생성되었습니다.');
-      } else if (selectedUser) {
-        await updateUser(selectedUser.id, userData);
-        alert('사용자 정보가 수정되었습니다.');
+        await createEmployee(employeeData);
+        alert('직원이 생성되었습니다.');
+      } else if (selectedEmployee) {
+        await updateEmployee(selectedEmployee.id, employeeData);
+        alert('직원 정보가 수정되었습니다.');
       }
       setIsModalOpen(false);
-      setSelectedUser(null);
+      setSelectedEmployee(null);
     } catch (error) {
       alert('작업에 실패했습니다.');
     }
@@ -76,7 +76,7 @@ export default function UsersPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">사용자 데이터를 불러오는 중...</span>
+        <span className="ml-2 text-gray-600">직원 데이터를 불러오는 중...</span>
       </div>
     );
   }
@@ -90,7 +90,7 @@ export default function UsersPage() {
           </svg>
           <span className="text-red-800">{error}</span>
           <button
-            onClick={refreshUsers}
+            onClick={refreshEmployees}
             className="ml-4 px-3 py-1 bg-red-100 text-red-800 rounded-md hover:bg-red-200"
           >
             다시 시도
@@ -105,46 +105,46 @@ export default function UsersPage() {
       {/* 페이지 헤더 */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">사용자 관리</h1>
-          <p className="text-gray-600">서비스 이용자 정보를 관리합니다</p>
+          <h1 className="text-2xl font-bold text-gray-900">직원 관리</h1>
+          <p className="text-gray-600">조직 내 직원 정보를 관리합니다</p>
         </div>
         <div className="flex items-center space-x-3">
           <button
-            onClick={refreshUsers}
+            onClick={refreshEmployees}
             className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-black"
           >
             <ArrowPathIcon className="h-4 w-4" />
             <span>새로고침</span>
           </button>
           <button
-            onClick={handleCreateUser}
+            onClick={handleCreateEmployee}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             <PlusIcon className="h-4 w-4" />
-            <span>사용자 추가</span>
+            <span>직원 추가</span>
           </button>
         </div>
       </div>
 
       {/* 통계 카드 */}
-      <UserStatsCards stats={stats} />
+      <EmployeeStatsCards stats={stats} />
 
-      {/* 사용자 테이블 */}
-      <UserTable
-        users={users}
-        onEdit={handleEditUser}
-        onDelete={handleDeleteUser}
+      {/* 직원 테이블 */}
+      <EmployeeTable
+        employees={employees}
+        onEdit={handleEditEmployee}
+        onDelete={handleDeleteEmployee}
         onStatusChange={handleStatusChange}
       />
 
-      {/* 사용자 생성/편집 모달 */}
+      {/* 직원 생성/편집 모달 */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={modalType === 'create' ? '새 사용자 생성' : '사용자 정보 수정'}
+        title={modalType === 'create' ? '새 직원 생성' : '직원 정보 수정'}
       >
-        <UserForm
-          user={selectedUser || undefined}
+        <EmployeeForm
+          employee={selectedEmployee || undefined}
           onSubmit={handleFormSubmit}
           onCancel={() => setIsModalOpen(false)}
         />
