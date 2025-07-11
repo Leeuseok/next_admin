@@ -42,7 +42,7 @@ export default function ContentFilters({
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             name="search"
-            placeholder="제목, 내용, 카테고리 검색..."
+            placeholder="제목, 내용, 카테고리 검색"
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-10"
@@ -60,6 +60,7 @@ export default function ContentFilters({
             { value: 'news', label: '뉴스' },
             { value: 'product', label: '제품' }
           ]}
+          className="text-gray-500"
         />
         
         <Select
@@ -72,6 +73,7 @@ export default function ContentFilters({
             { value: 'draft', label: '초안' },
             { value: 'archived', label: '보관됨' }
           ]}
+          className="text-gray-500"
         />
         
         <Select
@@ -82,6 +84,7 @@ export default function ContentFilters({
             { value: '', label: '모든 카테고리' },
             ...categories.map(cat => ({ value: cat, label: cat }))
           ]}
+          className="text-gray-500"
         />
         
         <div className="flex items-center space-x-2">
