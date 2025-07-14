@@ -1,17 +1,16 @@
-import { useState } from 'react';
 import {
-  EllipsisVerticalIcon,
   PencilIcon,
   TrashIcon,
   EyeIcon,
   DocumentTextIcon,
   PhotoIcon,
   NewspaperIcon,
-  GlobeAltIcon
+  GlobeAltIcon,
+  FilmIcon,
+  CheckIcon
 } from '@heroicons/react/24/outline';
-import { Menu } from '@headlessui/react';
 import Table from '@/components/Table';
-import { formatDate, getStatusColor, cn, truncateText } from '@/lib/utils';
+import { formatDate, cn } from '@/lib/utils';
 import type { Content as ContentType } from '@/types/content';
 import type { TableColumn } from '@/types';
 
@@ -20,9 +19,10 @@ interface ContentTableProps {
   onView: (content: ContentType) => void;
   onEdit: (content: ContentType) => void;
   onDelete: (content: ContentType) => void;
+  onReview?: (content: ContentType) => void;
 }
 
-export default function ContentTable({ contents, onView, onEdit, onDelete }: ContentTableProps) {
+export default function ContentTable({ contents, onView, onEdit, onDelete, onReview }: ContentTableProps) {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'post':
@@ -33,6 +33,10 @@ export default function ContentTable({ contents, onView, onEdit, onDelete }: Con
         return <NewspaperIcon className="h-4 w-4 text-purple-600" />;
       case 'page':
         return <GlobeAltIcon className="h-4 w-4 text-orange-600" />;
+      case 'image':
+        return <PhotoIcon className="h-4 w-4 text-pink-600" />;
+      case 'video':
+        return <FilmIcon className="h-4 w-4 text-red-600" />;
       default:
         return <DocumentTextIcon className="h-4 w-4 text-gray-600" />;
     }
@@ -48,6 +52,10 @@ export default function ContentTable({ contents, onView, onEdit, onDelete }: Con
         return '뉴스';
       case 'page':
         return '페이지';
+      case 'image':
+        return '이미지';
+      case 'video':
+        return '비디오';
       default:
         return type;
     }
@@ -55,14 +63,56 @@ export default function ContentTable({ contents, onView, onEdit, onDelete }: Con
 
   const getStatusLabel = (status: string) => {
     switch (status) {
+      case 'draft':
+        return '임시저장';
+      case 'pending':
+        return '검토 대기';
+      case 'approved':
+        return '승인됨';
       case 'published':
         return '게시됨';
-      case 'draft':
-        return '초안';
+      case 'rejected':
+        return '반려됨';
+      case 'scheduled':
+        return '예약됨';
       case 'archived':
         return '보관됨';
       default:
         return status;
+    }
+  };
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'published':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'approved':
+        return 'bg-blue-100 text-blue-800';
+      case 'draft':
+        return 'bg-gray-100 text-gray-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      case 'scheduled':
+        return 'bg-purple-100 text-purple-800';
+      case 'archived':
+        return 'bg-gray-100 text-gray-600';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPriorityBadgeClass = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-100 text-red-800';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'low':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -76,10 +126,20 @@ export default function ContentTable({ contents, onView, onEdit, onDelete }: Con
           <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
             {getTypeIcon(row.type)}
           </div>
-          <div>
-            <div className="font-medium text-gray-900">{value}</div>
-            <div className="text-sm text-gray-500">
+          <div className="min-w-0 flex-1">
+            <div className="font-medium text-gray-900 truncate">{value}</div>
+            <div className="text-sm text-gray-500 truncate">
               {row.excerpt || '-'}
+            </div>
+            <div className="flex items-center space-x-2 mt-1">
+              <span className={cn('px-2 py-0.5 text-xs font-medium rounded-full', getPriorityBadgeClass(row.priority))}>
+                {row.priority === 'high' ? '높음' : row.priority === 'medium' ? '보통' : '낮음'}
+              </span>
+              {row.featured && (
+                <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-800">
+                  추천
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -95,7 +155,10 @@ export default function ContentTable({ contents, onView, onEdit, onDelete }: Con
           value === 'post' ? 'bg-blue-100 text-blue-800' :
           value === 'product' ? 'bg-green-100 text-green-800' :
           value === 'news' ? 'bg-purple-100 text-purple-800' :
-          'bg-orange-100 text-orange-800'
+          value === 'page' ? 'bg-orange-100 text-orange-800' :
+          value === 'image' ? 'bg-pink-100 text-pink-800' :
+          value === 'video' ? 'bg-red-100 text-red-800' :
+          'bg-gray-100 text-gray-800'
         )}>
           {getTypeLabel(value)}
         </span>
@@ -106,24 +169,27 @@ export default function ContentTable({ contents, onView, onEdit, onDelete }: Con
       label: '상태',
       sortable: true,
       render: (value: string) => (
-        <span className={cn(
-          'px-2 py-1 text-xs font-medium rounded-full',
-          value === 'published' ? 'bg-green-100 text-green-800' :
-          value === 'draft' ? 'bg-yellow-100 text-yellow-800' :
-          'bg-gray-100 text-gray-800'
-        )}>
+        <span className={cn('px-2 py-1 text-xs font-medium rounded-full', getStatusBadgeClass(value))}>
           {getStatusLabel(value)}
         </span>
       )
     },
     {
-      key: 'category',
-      label: '카테고리',
-      sortable: true
-    },
-    {
       key: 'author',
       label: '작성자',
+      sortable: true,
+      render: (value: string, row: ContentType) => (
+        <div>
+          <div className="text-sm font-medium text-gray-900">{value}</div>
+          {row.reviewer && (
+            <div className="text-xs text-gray-500">검토자: {row.reviewer}</div>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'category',
+      label: '카테고리',
       sortable: true
     },
     {
@@ -136,63 +202,53 @@ export default function ContentTable({ contents, onView, onEdit, onDelete }: Con
       key: 'createdAt',
       label: '작성일',
       sortable: true,
-      render: (value: string) => formatDate(new Date(value))
+      render: (value: string, row: ContentType) => (
+        <div>
+          <div className="text-sm text-gray-900">{formatDate(value)}</div>
+          {row.scheduledAt && (
+            <div className="text-xs text-purple-600">
+              예약: {formatDate(row.scheduledAt)}
+            </div>
+          )}
+        </div>
+      )
     },
     {
       key: 'actions',
-      label: '작업',
+      label: '액션',
       render: (_, row: ContentType) => (
-        <Menu as="div" className="relative inline-block text-left">
-          <Menu.Button className="flex items-center text-gray-400 hover:text-gray-600">
-            <EllipsisVerticalIcon className="h-5 w-5" />
-          </Menu.Button>
-          <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-            <div className="py-1">
-              <Menu.Item>
-                {({ active }) => (
-                  <button
-                    onClick={() => onView(row)}
-                    className={cn(
-                      'flex items-center px-4 py-2 text-sm w-full text-left',
-                      active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                    )}
-                  >
-                    <EyeIcon className="mr-3 h-4 w-4" />
-                    상세보기
-                  </button>
-                )}
-              </Menu.Item>
-              <Menu.Item>
-                {({ active }) => (
-                  <button
-                    onClick={() => onEdit(row)}
-                    className={cn(
-                      'flex items-center px-4 py-2 text-sm w-full text-left',
-                      active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                    )}
-                  >
-                    <PencilIcon className="mr-3 h-4 w-4" />
-                    수정
-                  </button>
-                )}
-              </Menu.Item>
-              <Menu.Item>
-                {({ active }) => (
-                  <button
-                    onClick={() => onDelete(row)}
-                    className={cn(
-                      'flex items-center px-4 py-2 text-sm w-full text-left',
-                      active ? 'bg-gray-100 text-red-900' : 'text-red-700'
-                    )}
-                  >
-                    <TrashIcon className="mr-3 h-4 w-4" />
-                    삭제
-                  </button>
-                )}
-              </Menu.Item>
-            </div>
-          </Menu.Items>
-        </Menu>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => onView(row)}
+            className="text-blue-600 hover:text-blue-900 text-sm"
+            title="보기"
+          >
+            <EyeIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => onEdit(row)}
+            className="text-yellow-600 hover:text-yellow-900 text-sm"
+            title="편집"
+          >
+            <PencilIcon className="h-4 w-4" />
+          </button>
+          {onReview && (row.status === 'pending' || row.status === 'rejected') && (
+            <button
+              onClick={() => onReview(row)}
+              className="text-green-600 hover:text-green-900 text-sm"
+              title="검수"
+            >
+              <CheckIcon className="h-4 w-4" />
+            </button>
+          )}
+          <button
+            onClick={() => onDelete(row)}
+            className="text-red-600 hover:text-red-900 text-sm"
+            title="삭제"
+          >
+            <TrashIcon className="h-4 w-4" />
+          </button>
+        </div>
       )
     }
   ];

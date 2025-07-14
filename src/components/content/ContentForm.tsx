@@ -20,7 +20,11 @@ export default function ContentForm({ content, onSubmit, onCancel, isEdit = fals
     tagInput: '',
     author: content?.author || '',
     featured: content?.featured || false,
-    excerpt: content?.excerpt || ''
+    excerpt: content?.excerpt || '',
+    priority: content?.priority || 'medium' as const,
+    scheduledAt: content?.scheduledAt ? content.scheduledAt.split('T')[0] : '',
+    seoTitle: content?.seoTitle || '',
+    seoDescription: content?.seoDescription || ''
   });
 
   const categories = [
@@ -65,8 +69,15 @@ export default function ContentForm({ content, onSubmit, onCancel, isEdit = fals
       author: formData.author,
       featured: formData.featured,
       excerpt: formData.excerpt,
+      priority: formData.priority,
       viewCount: content?.viewCount || 0,
-      publishedAt: formData.status === 'published' ? new Date().toISOString() : content?.publishedAt
+      publishedAt: formData.status === 'published' ? new Date().toISOString() : content?.publishedAt,
+      scheduledAt: formData.scheduledAt ? new Date(formData.scheduledAt).toISOString() : undefined,
+      seoTitle: formData.seoTitle,
+      seoDescription: formData.seoDescription,
+      reviewer: content?.reviewer,
+      reviewedAt: content?.reviewedAt,
+      reviewNotes: content?.reviewNotes
     };
 
     onSubmit(contentData);
@@ -105,12 +116,14 @@ export default function ContentForm({ content, onSubmit, onCancel, isEdit = fals
           name="type"
           label="타입"
           value={formData.type}
-          onChange={(e) => setFormData({...formData, type: e.target.value as any})}
+          onChange={(e) => setFormData({...formData, type: e.target.value as Content['type']})}
           options={[
             { value: 'post', label: '게시글' },
             { value: 'page', label: '페이지' },
             { value: 'news', label: '뉴스' },
-            { value: 'product', label: '제품' }
+            { value: 'product', label: '제품' },
+            { value: 'image', label: '이미지' },
+            { value: 'video', label: '비디오' }
           ]}
         />
         
@@ -118,10 +131,13 @@ export default function ContentForm({ content, onSubmit, onCancel, isEdit = fals
           name="status"
           label="상태"
           value={formData.status}
-          onChange={(e) => setFormData({...formData, status: e.target.value as any})}
+          onChange={(e) => setFormData({...formData, status: e.target.value as Content['status']})}
           options={[
-            { value: 'draft', label: '초안' },
+            { value: 'draft', label: '임시저장' },
+            { value: 'pending', label: '검토 대기' },
+            { value: 'approved', label: '승인됨' },
             { value: 'published', label: '게시됨' },
+            { value: 'scheduled', label: '예약됨' },
             { value: 'archived', label: '보관됨' }
           ]}
         />
@@ -144,6 +160,20 @@ export default function ContentForm({ content, onSubmit, onCancel, isEdit = fals
           required
         />
         
+        <Select
+          name="priority"
+          label="우선순위"
+          value={formData.priority}
+          onChange={(e) => setFormData({...formData, priority: e.target.value as Content['priority']})}
+          options={[
+            { value: 'low', label: '낮음' },
+            { value: 'medium', label: '보통' },
+            { value: 'high', label: '높음' }
+          ]}
+        />
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -156,6 +186,16 @@ export default function ContentForm({ content, onSubmit, onCancel, isEdit = fals
             추천 콘텐츠
           </label>
         </div>
+        
+        {formData.status === 'scheduled' && (
+          <Input
+            name="scheduledAt"
+            label="예약 날짜"
+            type="date"
+            value={formData.scheduledAt}
+            onChange={(e) => setFormData({...formData, scheduledAt: e.target.value})}
+          />
+        )}
       </div>
       
       <div>
@@ -198,6 +238,29 @@ export default function ContentForm({ content, onSubmit, onCancel, isEdit = fals
           >
             추가
           </Button>
+        </div>
+      </div>
+      
+      {/* SEO 섹션 */}
+      <div className="border-t border-gray-200 pt-6">
+        <h4 className="text-lg font-medium text-gray-900 mb-4">SEO 설정</h4>
+        <div className="space-y-4">
+          <Input
+            name="seoTitle"
+            label="SEO 제목"
+            value={formData.seoTitle}
+            onChange={(e) => setFormData({...formData, seoTitle: e.target.value})}
+            placeholder="검색 엔진에 표시될 제목"
+          />
+          
+          <Textarea
+            name="seoDescription"
+            label="SEO 설명"
+            value={formData.seoDescription}
+            onChange={(e) => setFormData({...formData, seoDescription: e.target.value})}
+            rows={3}
+            placeholder="검색 엔진에 표시될 설명"
+          />
         </div>
       </div>
       

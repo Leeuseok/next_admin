@@ -2,25 +2,60 @@
 export interface Content {
   id: string;
   title: string;
-  type: 'post' | 'page' | 'news' | 'product';
-  status: 'draft' | 'published' | 'archived';
+  type: 'post' | 'page' | 'news' | 'product' | 'image' | 'video';
+  status: 'draft' | 'pending' | 'approved' | 'published' | 'rejected' | 'archived' | 'scheduled';
   author: string;
+  reviewer?: string;
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;
+  scheduledAt?: string;
+  reviewedAt?: string;
   excerpt?: string;
   content?: string;
+  imageUrl?: string;
   tags: string[];
   category: string;
   viewCount: number;
   featured: boolean;
+  priority: 'low' | 'medium' | 'high';
+  seoTitle?: string;
+  seoDescription?: string;
+  reviewNotes?: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  color: string;
+  parentId?: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  color: string;
+  description?: string;
+  usageCount: number;
+  createdAt: string;
 }
 
 export interface ContentStats {
   totalContent: number;
   publishedContent: number;
   draftContent: number;
+  pendingContent: number;
   archivedContent: number;
+  rejectedContent: number;
+  scheduledContent: number;
+  categoryStats: { [category: string]: number };
+  typeStats: { [type: string]: number };
 }
 
 export interface UseContentReturn {

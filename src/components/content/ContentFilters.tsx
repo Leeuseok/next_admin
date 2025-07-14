@@ -45,7 +45,7 @@ export default function ContentFilters({
             placeholder="제목, 내용, 카테고리 검색"
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10"
+            className="pl-10 text-gray-500"
           />
         </div>
         
@@ -58,7 +58,9 @@ export default function ContentFilters({
             { value: 'post', label: '게시글' },
             { value: 'page', label: '페이지' },
             { value: 'news', label: '뉴스' },
-            { value: 'product', label: '제품' }
+            { value: 'product', label: '제품' },
+            { value: 'image', label: '이미지' },
+            { value: 'video', label: '비디오' }
           ]}
           className="text-gray-500"
         />
@@ -69,8 +71,12 @@ export default function ContentFilters({
           onChange={(e) => onStatusChange(e.target.value)}
           options={[
             { value: '', label: '모든 상태' },
+            { value: 'draft', label: '임시저장' },
+            { value: 'pending', label: '검토 대기' },
+            { value: 'approved', label: '승인됨' },
             { value: 'published', label: '게시됨' },
-            { value: 'draft', label: '초안' },
+            { value: 'rejected', label: '반려됨' },
+            { value: 'scheduled', label: '예약됨' },
             { value: 'archived', label: '보관됨' }
           ]}
           className="text-gray-500"
